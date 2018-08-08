@@ -42,7 +42,7 @@ function scalarfunc(func,fsym=symbol(string(func)))
     nm = isdefined(Base,fsym) ? :(Base.$fsym) : fsym
     return quote
         #nm needs to be a symbol or expr, i.e. :sin or :(Base.sin)
-        function $(nm)(context::Ptr{Void}, nargs::Cint, values::Ptr{Ptr{Void}})
+        function $(nm)(context::Ptr{Cvoid}, nargs::Cint, values::Ptr{Ptr{Cvoid}})
             args = [SQLite.sqlvalue(values, i) for i in 1:nargs]
             ret = $(func)(args...)
             SQLite.sqlreturn(context, ret)
@@ -72,7 +72,7 @@ end
 function stepfunc(init, func, fsym=symbol(string(func)*"_step"))
     nm = isdefined(Base,fsym) ? :(Base.$fsym) : fsym
     return quote
-        function $(nm)(context::Ptr{Void}, nargs::Cint, values::Ptr{Ptr{Void}})
+        function $(nm)(context::Ptr{Cvoid}, nargs::Cint, values::Ptr{Ptr{Cvoid}})
             args = [sqlvalue(values, i) for i in 1:nargs]
 
             intsize = sizeof(Int)
@@ -146,7 +146,7 @@ end
 function finalfunc(init, func, fsym=symbol(string(func)*"_final"))
     nm = isdefined(Base,fsym) ? :(Base.$fsym) : fsym
     return quote
-        function $(nm)(context::Ptr{Void}, nargs::Cint, values::Ptr{Ptr{Void}})
+        function $(nm)(context::Ptr{Cvoid}, nargs::Cint, values::Ptr{Ptr{Cvoid}})
             acptr = convert(Ptr{UInt8}, sqlite3_aggregate_context(context, 0))
 
             # step function wasn't run
@@ -198,7 +198,7 @@ function register(db, func::Function; nargs::Int=-1, name::AbstractString=string
 
     f = eval(scalarfunc(func,Symbol(name)))
 
-    cfunc = cfunction(f, Void, Tuple{Ptr{Void}, Cint, Ptr{Ptr{Void}}})
+    cfunc = cfunction(f, Nothing, Tuple{Ptr{Cvoid}, Cint, Ptr{Ptr{Cvoid}}})
     # TODO: allow the other encodings
     enc = SQLITE_UTF8
     enc = isdeterm ? enc | SQLITE_DETERMINISTIC : enc
@@ -219,9 +219,9 @@ function register(
     @assert sizeof(name) <= 255 "size of function name must be <= 255 chars"
 
     s = eval(stepfunc(init, step, Base.function_name(step)))
-    cs = cfunction(s, Void, Tuple{Ptr{Void}, Cint, Ptr{Ptr{Void}}})
+    cs = cfunction(s, Nothing, Tuple{Ptr{Cvoid}, Cint, Ptr{Ptr{Cvoid}}})
     f = eval(finalfunc(init, final, Base.function_name(final)))
-    cf = cfunction(f, Void, Tuple{Ptr{Void}, Cint, Ptr{Ptr{Void}}})
+    cf = cfunction(f, Nothing, Tuple{Ptr{Cvoid}, Cint, Ptr{Ptr{Cvoid}}})
 
     enc = SQLITE_UTF8
     enc = isdeterm ? enc | SQLITE_DETERMINISTIC : enc
@@ -232,6 +232,6 @@ function register(
 end
 
 # annotate types because the MethodError makes more sense that way
-regexp(r::AbstractString, s::AbstractString) = ismatch(Regex(r), s)
+regexp(r::AbstractString, s::AbstractString) = occursin(Regex(r), s)
 # macro for preserving the special characters in a string
 macro sr_str(s) s end

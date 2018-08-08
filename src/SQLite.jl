@@ -1,13 +1,7 @@
-__precompile__(true)
 module SQLite
 
 using Missings, DataStreams, WeakRefStrings, LegacyStrings, DataFrames
 import LegacyStrings: UTF16String
-
-if VERSION < v"0.7.0-DEV.2562"
-    import Base: finalizer
-    finalizer(f::Function, o) = finalizer(o, f)
-end
 
 export Data, DataFrame
 
@@ -35,11 +29,11 @@ Constructors:
 """
 mutable struct DB
     file::String
-    handle::Ptr{Void}
+    handle::Ptr{Cvoid}
     changes::Int
 
     function DB(f::AbstractString)
-        handle = Ref{Ptr{Void}}()
+        handle = Ref{Ptr{Cvoid}}()
         f = isempty(f) ? f : expanduser(f)
         if @OK sqliteopen(f, handle)
             db = new(f, handle[], 0)
@@ -66,11 +60,11 @@ Base.show(io::IO, db::SQLite.DB) = print(io, string("SQLite.DB(", db.file == ":m
 """
 mutable struct Stmt
     db::DB
-    handle::Ptr{Void}
+    handle::Ptr{Cvoid}
 
     function Stmt(db::DB,sql::AbstractString)
-        handle = Ref{Ptr{Void}}()
-        sqliteprepare(db, sql, handle, Ref{Ptr{Void}}())
+        handle = Ref{Ptr{Cvoid}}()
+        sqliteprepare(db, sql, handle, Ref{Ptr{Cvoid}}())
         stmt = new(db, handle[])
         finalizer(_close, stmt)
         return stmt
@@ -187,11 +181,7 @@ end
 
 # magic bytes that indicate that a value is in fact a serialized julia value, instead of just a byte vector
 # const SERIALIZATION = UInt8[0x11,0x01,0x02,0x0d,0x53,0x65,0x72,0x69,0x61,0x6c,0x69,0x7a,0x61,0x74,0x69,0x6f,0x6e,0x23]
-if VERSION < v"0.7.0-DEV.1833"
-    const SERIALIZATION = UInt8[0x34,0x10,0x01,0x0d,0x53,0x65,0x72,0x69,0x61,0x6c,0x69,0x7a,0x61,0x74,0x69,0x6f,0x6e,0x1f]
-else
-    const SERIALIZATION = UInt8[0x37,0x4a,0x4c,0x07,0x04,0x00,0x00,0x00,0x34,0x10,0x01,0x0d,0x53,0x65,0x72,0x69,0x61,0x6c]
-end
+const SERIALIZATION = UInt8[0x37,0x4a,0x4c,0x07,0x04,0x00,0x00,0x00,0x34,0x10,0x01,0x0d,0x53,0x65,0x72,0x69,0x61,0x6c]
 function sqldeserialize(r)
     ret = ccall(:memcmp, Int32, (Ptr{UInt8}, Ptr{UInt8}, UInt),
             SERIALIZATION, r, min(18, length(r)))
