@@ -1,5 +1,5 @@
 using SQLite
-using Base.Test, Missings, WeakRefStrings, DataStreams, DataFrames
+using Test, Missings, WeakRefStrings, DataStreams, DataFrames
 
 if Base.VERSION < v"0.7.0-DEV.2575"
     const Dates = Base.Dates
@@ -13,7 +13,7 @@ dbfile = joinpath(dirname(@__FILE__),"Chinook_Sqlite.sqlite")
 dbfile2 = joinpath(dirname(@__FILE__),"test.sqlite")
 dbfile = joinpath(Pkg.dir("SQLite"),"test/Chinook_Sqlite.sqlite")
 dbfile2 = joinpath(Pkg.dir("SQLite"),"test/test.sqlite")
-cp(dbfile, dbfile2; remove_destination=true)
+cp(dbfile, dbfile2; force=true)
 db = SQLite.DB(dbfile2)
 
 # regular SQLite tests
