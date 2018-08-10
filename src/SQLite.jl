@@ -1,6 +1,7 @@
 module SQLite
 
 using DataStreams, WeakRefStrings, LegacyStrings, DataFrames
+using Distributed
 import LegacyStrings: UTF16String
 
 export Data, DataFrame
@@ -87,7 +88,7 @@ export @sr_str, @register, register
 
 clears any bound values to a prepared SQL statement.
 """
-function Base.clear!(stmt::Stmt)
+function Distributed.clear!(stmt::Stmt)
     sqlite3_clear_bindings(stmt.handle)
     return
 end

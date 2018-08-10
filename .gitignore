@@ -3,6 +3,7 @@
 *.jl.mem
 /deps/builds
 /deps/usr
+/deps/build.log
 CMakeLists.txt.user
 /deps/deps.jl
 /test/test.sqlite
