@@ -1,6 +1,6 @@
 module SQLite
 
-using Missings, DataStreams, WeakRefStrings, LegacyStrings, DataFrames
+using DataStreams, WeakRefStrings, LegacyStrings, DataFrames
 import LegacyStrings: UTF16String
 
 export Data, DataFrame
